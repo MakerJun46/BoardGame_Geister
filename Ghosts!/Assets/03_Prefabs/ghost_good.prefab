@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2961190877040414265}
   - component: {fileID: 2364765598548588369}
   - component: {fileID: 3563491733369697858}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: pasted__pSphere6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -90,7 +90,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3043835883806242853}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ghost_good
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,7 @@ GameObject:
   - component: {fileID: 7951082804556302267}
   - component: {fileID: 4044718540365812884}
   - component: {fileID: 7547019569929062866}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: pCylinder4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -206,7 +206,7 @@ GameObject:
   - component: {fileID: 551324316672043974}
   - component: {fileID: 1205970501419539279}
   - component: {fileID: 7105986647935089175}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: group8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -254,7 +254,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 6034957751646507721, guid: 979f8d0608c4d514fa71296ea951178a, type: 3}
+  - {fileID: 2100000, guid: b9efb72c7b4c3364b83d58be3a32bad5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
