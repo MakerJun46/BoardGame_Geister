@@ -56,9 +56,13 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\02_Scripts\Cell.cs" />
+    <Compile Include="Assets\02_Scripts\Ghost.cs" />
     <Compile Include="Assets\Laterns and candles\scripts\ExtendedFlycam.cs" />
-    <Compile Include="Assets\Laterns and candles\scripts\CameraFacing.cs" />
     <Compile Include="Assets\02_Scripts\Random_Environments.cs" />
+    <Compile Include="Assets\Laterns and candles\scripts\CameraFacing.cs" />
+    <Compile Include="Assets\02_Scripts\GameManager.cs" />
+    <Compile Include="Assets\02_Scripts\GhostMovement.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Laterns and candles\Shaders\GlassStainedBumpDistort.shader" />

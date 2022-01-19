@@ -7,6 +7,7 @@ public class Random_Environments : MonoBehaviour
 {
     System.Random random;
     public Light lanternFire_Light;
+    public GameObject Lantern_Fire;
     public Light Window_Light;
 
     bool isBlinking;
@@ -30,42 +31,72 @@ public class Random_Environments : MonoBehaviour
         isBlinking = false;
         isLightning = false;
 
-        next_blink = 0f;
-        next_Lightning = 0f;
+        next_blink = random.Next(Blink_return_min_Time, Blink_return_max_Time);
+        next_Lightning = random.Next(Lightning_return_min_Time, Lightning_return_max_Time);
     }
 
     void Update()
     {
         blink_Lantern();
+        Window_Lightning();
     }
 
     void blink_Lantern()
     {
-        if (!isBlinking && Time.time > current_Blink + Blink_return_Time)
+        if (!isBlinking && Time.time > current_Blink + next_blink)
         {
-                current_Blink = Time.time;
-                Debug.Log(current_Blink);
+            next_blink = random.Next(Blink_return_min_Time, Blink_return_max_Time);
 
-                StartCoroutine(blink());
+            current_Blink = Time.time;
 
-                isBlinking = true;
-            next_blink
+            StartCoroutine(blink());
 
+            isBlinking = true;
+        }
+    }
 
+    void Window_Lightning()
+    {
+        if(!isLightning && Time.time > current_Lightning + next_Lightning)
+        {
+            next_Lightning = random.Next(Lightning_return_min_Time, Lightning_return_max_Time);
+
+            current_Lightning = Time.time;
+
+            StartCoroutine(Lightning());
+
+            isLightning = true;
         }
     }
 
     IEnumerator blink()
     {
         lanternFire_Light.intensity = 0;
+        Lantern_Fire.SetActive(false);
         yield return new WaitForSeconds(1.0f);
 
-        while(lanternFire_Light.intensity <= 2)
+        while (lanternFire_Light.intensity <= 2)
         {
             lanternFire_Light.intensity += 0.1f;
-            yield return null;
+            yield return new WaitForSeconds(0.05f);
         }
 
+        Lantern_Fire.SetActive(true);
+
         isBlinking = false;
+    }
+
+    IEnumerator Lightning()
+    {
+        Window_Light.intensity = random.Next(5, 7);
+        yield return new WaitForSeconds(0.1f);
+        Window_Light.intensity = random.Next(3, 5);
+        yield return new WaitForSeconds(0.05f);
+        Window_Light.intensity = random.Next(3, 4);
+        yield return new WaitForSeconds(0.05f);
+
+        Window_Light.intensity = 1;
+
+        isLightning = false;
     }
 }
