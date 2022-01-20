@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Photon.Pun;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+
+    public PhotonView PV;
     
     private void Awake()
     {
@@ -23,24 +26,24 @@ public class GameManager : MonoBehaviour
     public List<Cell> Board_Cells;
 
     public GameObject TilePosition_Parent;
+    public GameObject PlayerTurn_Fire;
 
-    public bool isReady;
     public bool isSorted;
+    public bool isSettingComplete;
+    public bool isPlayerTurn;
+
+    public string PlayerCode;
 
     void Start()
     {
-        isReady = false;
+        Screen.SetResolution(1600, 900, false);
+
         isSorted = false;
+        isSettingComplete = false;
     }
 
     void Update()
-    {
-        if(isReady)
-        {
-            test();
-            isReady = false;
-        }
-        
+    {        
         if(!isSorted)
         {
             Loading();
@@ -61,42 +64,118 @@ public class GameManager : MonoBehaviour
             Board_Cells[i].cell_Index = i;
         }
 
-        isReady = true;
         isSorted = true;
     }
 
-    public void test()
+    public void Set_Player_A()
     {
+        PlayerCode = "A";
+
         random = new System.Random();
         int randomIndex = random.Next(0, 8);
 
-        foreach (GameObject go in PlayerA_Ghosts)
+        if (PhotonNetwork.IsMasterClient)
         {
-            while (PlayerA_Start_Positions[randomIndex].this_Cell_Ghost != null)
+            for (int i = 0; i < 4; i++)
             {
-                randomIndex = random.Next(0, 8);
+                GameObject good = PhotonNetwork.Instantiate("Ghost_good", Vector3.zero, Quaternion.identity);
+                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", Vector3.zero, Quaternion.identity);
+
+                good.GetComponent<Ghost>().PlayerCode = "A";
+                bad.GetComponent<Ghost>().PlayerCode = "A";
+
+                good.transform.parent = GameObject.Find("Player_A_Objects").transform;
+                bad.transform.parent = GameObject.Find("Player_A_Objects").transform;
+
+                PlayerA_Ghosts.Add(good);
+                PlayerA_Ghosts.Add(bad);
             }
 
-            Debug.Log(go.name + " ÀÇ position : " + PlayerA_Start_Positions[randomIndex].transform.position + "rI : " + randomIndex);
-            go.transform.position = PlayerA_Start_Positions[randomIndex].transform.position;
-            PlayerA_Start_Positions[randomIndex].this_Cell_Ghost = go;
-            go.GetComponent<Ghost>().cell_Index = PlayerA_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+            foreach (GameObject go in PlayerA_Ghosts)
+            {
+                while (PlayerA_Start_Positions[randomIndex].this_Cell_Ghost != null)
+                {
+                    randomIndex = random.Next(0, 8);
+                }
+
+                go.transform.position = PlayerA_Start_Positions[randomIndex].transform.position;
+                PlayerA_Start_Positions[randomIndex].this_Cell_Ghost = go;
+                go.GetComponent<Ghost>().cell_Index = PlayerA_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+            }
         }
 
-        randomIndex = random.Next(0, 8);
 
-        foreach (GameObject go in PlayerB_Ghosts)
+        isPlayerTurn = true;
+
+        PlayerTurn_Fire = GameObject.Find("PlayerA_Turn_Candle").transform.Find("fire").gameObject;
+
+        
+
+        isSettingComplete = true;
+    }
+
+    public void Set_Player_B()
+    {
+        PlayerCode = "B";
+
+        random = new System.Random();
+        int randomIndex = random.Next(0, 8);
+
+        if (PhotonNetwork.IsMasterClient)
         {
-            while (PlayerB_Start_Positions[randomIndex].this_Cell_Ghost != null)
+            for (int i = 0; i < 4; i++)
             {
-                randomIndex = random.Next(0, 8);
+                GameObject good = PhotonNetwork.Instantiate("Ghost_good", Vector3.zero, Quaternion.Euler(0, 180, 0));
+                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", Vector3.zero, Quaternion.Euler(0, 180, 0));
+
+                good.GetComponent<Ghost>().PlayerCode = "B";
+                bad.GetComponent<Ghost>().PlayerCode = "B";
+
+                good.transform.parent = GameObject.Find("Player_B_Objects").transform;
+                bad.transform.parent = GameObject.Find("Player_B_Objects").transform;
+
+                PlayerB_Ghosts.Add(good);
+                PlayerB_Ghosts.Add(bad);
             }
 
+            foreach (GameObject go in PlayerA_Ghosts)
+            {
+                while (PlayerB_Start_Positions[randomIndex].this_Cell_Ghost != null)
+                {
+                    randomIndex = random.Next(0, 8);
+                }
 
-            Debug.Log(go.name + " ÀÇ position : " + PlayerB_Start_Positions[randomIndex].transform.position + "rI : " + randomIndex);
-            go.transform.position = PlayerB_Start_Positions[randomIndex].transform.position;
-            PlayerB_Start_Positions[randomIndex].this_Cell_Ghost = go;
-            go.GetComponent<Ghost>().cell_Index = PlayerB_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+                go.transform.position = PlayerB_Start_Positions[randomIndex].transform.position;
+                PlayerB_Start_Positions[randomIndex].this_Cell_Ghost = go;
+                go.GetComponent<Ghost>().cell_Index = PlayerB_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+            }
         }
+
+        isPlayerTurn = false;
+
+        PlayerTurn_Fire = GameObject.Find("PlayerB_Turn_Candle").gameObject;
+
+        isSettingComplete = true;
+    }
+
+    [PunRPC]
+    public void Change_Turn()
+    {
+        isPlayerTurn = !isPlayerTurn;
+
+        if(isPlayerTurn)
+        {
+            PlayerTurn_Fire.SetActive(true);
+        }
+        else
+        {
+            PlayerTurn_Fire.SetActive(false);
+        }
+    }
+    [PunRPC]
+    public void Turn_Fire_On()
+    {
+        if(isPlayerTurn)
+            PlayerTurn_Fire.SetActive(true);
     }
 }
