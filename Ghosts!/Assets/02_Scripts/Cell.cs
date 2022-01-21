@@ -10,6 +10,8 @@ public class Cell : MonoBehaviour
     GameObject CanCatch_PS;
     public int cell_Index;
 
+    public bool isEscapeCell;
+
     private void Start()
     {
         CanMove_PS = transform.GetChild(0).gameObject;

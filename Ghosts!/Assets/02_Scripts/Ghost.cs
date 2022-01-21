@@ -13,6 +13,10 @@ public class Ghost : MonoBehaviour
 
     public string PlayerCode;
 
+    public enum GhostType { good, bad};
+
+    public GhostType ghost_Type;
+
     private void Start()
     {
         neighbor_Cells = new List<Cell>();
@@ -37,9 +41,11 @@ public class Ghost : MonoBehaviour
     {
         foreach(Cell c in neighbor_Cells)
         {
-            if (c.this_Cell_Ghost == null)
+            if (c.this_Cell_Ghost == null && !c.isEscapeCell)
                 c.TurnOn_CanMove();
-            else if (!c.this_Cell_Ghost.GetComponent<PhotonView>().IsMine)
+            else if (c.this_Cell_Ghost == null && c.isEscapeCell)
+                c.TurnOn_CanMove();
+            else if (c.this_Cell_Ghost != null && !c.this_Cell_Ghost.GetComponent<PhotonView>().IsMine)  // isMine 아닌(상대) 유령이면 cancatch on
                 c.TurnOn_CanCatch();
         }
 

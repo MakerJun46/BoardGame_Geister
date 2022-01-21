@@ -55,7 +55,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         else    // player B
         {
             Debug.Log("마스터 클라이언트 아니라서 플레이어 B");
-            GameManager.instance.Set_Player_B();
+            StartCoroutine(Wait_PlayerA_Setting());
         }
+    }
+
+    IEnumerator Wait_PlayerA_Setting()
+    {
+        while (!GameManager.instance.isSettingAComplete)
+            yield return null;
+
+        GameManager.instance.Set_Player_B();
     }
 }

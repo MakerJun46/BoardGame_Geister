@@ -359,6 +359,7 @@ MonoBehaviour:
   neighbor_Cells: []
   Turn_On_PS: 0
   PlayerCode: 
+  ghost_Type: 0
 --- !u!65 &7848643966134138509
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -410,4 +411,4 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
-  m_UseLocal: 1
+  m_UseLocal: 0

@@ -49,6 +49,12 @@ MonoBehaviour:
   - Player_B_Ghosts_Set_Parent
   - Setting_A_Complete
   - Setting_B_Complete
+  - GhostSetCell2
+  - OffGhostCross
+  - SetGhostCross
+  - OnGhostCross
+  - GameOver
+  - MoveGhost_setCell
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -327,6 +327,7 @@ MonoBehaviour:
   neighbor_Cells: []
   Turn_On_PS: 0
   PlayerCode: 
+  ghost_Type: 1
 --- !u!65 &2421274101019037740
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -358,7 +359,8 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: -6723269525955910628}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -377,4 +379,4 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
-  m_UseLocal: 1
+  m_UseLocal: 0
