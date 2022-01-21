@@ -29,8 +29,10 @@ public class GameManager : MonoBehaviour
     public GameObject PlayerTurn_Fire;
 
     public bool isSorted;
-    public bool isSettingComplete;
+    public bool isSettingAComplete;
+    public bool isSettingBComplete;
     public bool isPlayerTurn;
+    public bool isGameStarted;
 
     public string PlayerCode;
 
@@ -39,19 +41,23 @@ public class GameManager : MonoBehaviour
         Screen.SetResolution(1600, 900, false);
 
         isSorted = false;
-        isSettingComplete = false;
+        isSettingAComplete = false;
+        isSettingBComplete = false;
+        isGameStarted = false;
     }
 
     void Update()
     {        
-        if(!isSorted)
+        if(PhotonNetwork.IsMasterClient && isSettingAComplete && isSettingBComplete && !isGameStarted)
         {
-            Loading();
+            isGameStarted = true;
+            Debug.LogError("GameStart");
         }
     }
 
     public void Loading()
     {
+        Debug.Log("Loading..");
         Transform tmp = Board_Cells[0].transform;
         for(int i = 1; i < Board_Cells.Count; i++)
         {
@@ -74,44 +80,35 @@ public class GameManager : MonoBehaviour
         random = new System.Random();
         int randomIndex = random.Next(0, 8);
 
+        int index = 0;
+
         if (PhotonNetwork.IsMasterClient)
         {
             for (int i = 0; i < 4; i++)
             {
-                GameObject good = PhotonNetwork.Instantiate("Ghost_good", Vector3.zero, Quaternion.identity);
-                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", Vector3.zero, Quaternion.identity);
+                GameObject good = PhotonNetwork.Instantiate("Ghost_good", PlayerA_Start_Positions[index].transform.position, Quaternion.identity);
+                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", PlayerA_Start_Positions[index + 1].transform.position, Quaternion.identity);
 
-                good.GetComponent<Ghost>().PlayerCode = "A";
-                bad.GetComponent<Ghost>().PlayerCode = "A";
+                PV.RPC("Player_A_Ghosts_Set_Parent", RpcTarget.All, good.GetComponent<PhotonView>().ViewID);
+                PV.RPC("Player_A_Ghosts_Set_Parent", RpcTarget.All, bad.GetComponent<PhotonView>().ViewID);
 
-                good.transform.parent = GameObject.Find("Player_A_Objects").transform;
-                bad.transform.parent = GameObject.Find("Player_A_Objects").transform;
+                int[] parameters_good = { good.GetComponent<PhotonView>().ViewID, PlayerA_Start_Positions[index].GetComponent<Cell>().cell_Index };
+                int[] parameters_bad = { bad.GetComponent<PhotonView>().ViewID, PlayerA_Start_Positions[index + 1].GetComponent<Cell>().cell_Index };
+            
+                PV.RPC("GhostSetCell", RpcTarget.All, parameters_good);
+                //PV.RPC("GhostSetCall", RpcTarget.All, parameters_bad);
 
-                PlayerA_Ghosts.Add(good);
-                PlayerA_Ghosts.Add(bad);
-            }
-
-            foreach (GameObject go in PlayerA_Ghosts)
-            {
-                while (PlayerA_Start_Positions[randomIndex].this_Cell_Ghost != null)
-                {
-                    randomIndex = random.Next(0, 8);
-                }
-
-                go.transform.position = PlayerA_Start_Positions[randomIndex].transform.position;
-                PlayerA_Start_Positions[randomIndex].this_Cell_Ghost = go;
-                go.GetComponent<Ghost>().cell_Index = PlayerA_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+                index += 2;
             }
         }
-
 
         isPlayerTurn = true;
 
         PlayerTurn_Fire = GameObject.Find("PlayerA_Turn_Candle").transform.Find("fire").gameObject;
 
-        
+        GameObject.Find("MainCamera_B").gameObject.SetActive(false);
 
-        isSettingComplete = true;
+        isSettingAComplete = true;
     }
 
     public void Set_Player_B()
@@ -121,41 +118,35 @@ public class GameManager : MonoBehaviour
         random = new System.Random();
         int randomIndex = random.Next(0, 8);
 
-        if (PhotonNetwork.IsMasterClient)
+        int index = 0;
+
+        if (!PhotonNetwork.IsMasterClient)
         {
             for (int i = 0; i < 4; i++)
             {
-                GameObject good = PhotonNetwork.Instantiate("Ghost_good", Vector3.zero, Quaternion.Euler(0, 180, 0));
-                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", Vector3.zero, Quaternion.Euler(0, 180, 0));
+                GameObject good = PhotonNetwork.Instantiate("Ghost_good", PlayerB_Start_Positions[index].transform.position, Quaternion.Euler(0, 180, 0));
+                GameObject bad = PhotonNetwork.Instantiate("Ghost_bad", PlayerB_Start_Positions[index + 1].transform.position, Quaternion.Euler(0, 180, 0));
 
-                good.GetComponent<Ghost>().PlayerCode = "B";
-                bad.GetComponent<Ghost>().PlayerCode = "B";
+                PV.RPC("Player_B_Ghosts_Set_Parent", RpcTarget.All, good.GetComponent<PhotonView>().ViewID);
+                PV.RPC("Player_B_Ghosts_Set_Parent", RpcTarget.All, bad.GetComponent<PhotonView>().ViewID);
 
-                good.transform.parent = GameObject.Find("Player_B_Objects").transform;
-                bad.transform.parent = GameObject.Find("Player_B_Objects").transform;
+                int[] parameters_good = { good.GetComponent<PhotonView>().ViewID, PlayerB_Start_Positions[index].GetComponent<Cell>().cell_Index };
+                int[] parameters_bad = { bad.GetComponent<PhotonView>().ViewID, PlayerB_Start_Positions[index + 1].GetComponent<Cell>().cell_Index };
 
-                PlayerB_Ghosts.Add(good);
-                PlayerB_Ghosts.Add(bad);
-            }
+                //PV.RPC("GhostSetCell", RpcTarget.All, parameters_good);
+                //PV.RPC("GhostSetCall", RpcTarget.All, parameters_bad);
 
-            foreach (GameObject go in PlayerA_Ghosts)
-            {
-                while (PlayerB_Start_Positions[randomIndex].this_Cell_Ghost != null)
-                {
-                    randomIndex = random.Next(0, 8);
-                }
-
-                go.transform.position = PlayerB_Start_Positions[randomIndex].transform.position;
-                PlayerB_Start_Positions[randomIndex].this_Cell_Ghost = go;
-                go.GetComponent<Ghost>().cell_Index = PlayerB_Start_Positions[randomIndex].GetComponent<Cell>().cell_Index;
+                index += 2;
             }
         }
 
-        isPlayerTurn = false;
+        isPlayerTurn = true;
 
-        PlayerTurn_Fire = GameObject.Find("PlayerB_Turn_Candle").gameObject;
+        PlayerTurn_Fire = GameObject.Find("PlayerB_Turn_Candle").transform.Find("fire").gameObject;
 
-        isSettingComplete = true;
+        GameObject.Find("MainCamera_A").gameObject.SetActive(false);
+
+        isSettingBComplete = true;
     }
 
     [PunRPC]
@@ -177,5 +168,44 @@ public class GameManager : MonoBehaviour
     {
         if(isPlayerTurn)
             PlayerTurn_Fire.SetActive(true);
+    }
+
+    [PunRPC]
+    public void Player_A_Ghosts_Set_Parent(int ViewID)
+    {
+        GameObject go = PhotonView.Find(ViewID).gameObject;
+
+        go.transform.parent = GameObject.Find("Player_A_Objects").transform;
+
+        PlayerA_Ghosts.Add(go);
+    }
+
+    [PunRPC]
+    public void Player_B_Ghosts_Set_Parent(int ViewID)
+    {
+        GameObject go = PhotonView.Find(ViewID).gameObject;
+
+        go.transform.parent = GameObject.Find("Player_B_Objects").transform;
+
+        PlayerB_Ghosts.Add(go);
+    }
+
+    [PunRPC]
+    public void GhostSetCell(int[] parameters)
+    {
+        GameObject go = PhotonView.Find(parameters[0]).gameObject;
+
+        go.GetComponent<Ghost>().cell_Index = parameters[1];
+    }
+    [PunRPC]
+    public void Setting_A_Complete()
+    {
+        isSettingAComplete = true;
+    }
+
+    [PunRPC]
+    public void Setting_B_Complete()
+    {
+        isSettingBComplete = true;
     }
 }

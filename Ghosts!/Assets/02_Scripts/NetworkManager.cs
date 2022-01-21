@@ -29,10 +29,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
-            {
-                PV.RPC("GameSet", RpcTarget.AllBuffered);
-            }
+            PV.RPC("GameSet", RpcTarget.All);
         }
     }
 

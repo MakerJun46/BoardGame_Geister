@@ -43,6 +43,12 @@ MonoBehaviour:
   - Turn_Fire_On
   - Add_PlayerA_Ghost
   - GameSet
+  - test
+  - GhostSetCell
+  - Player_A_Ghosts_Set_Parent
+  - Player_B_Ghosts_Set_Parent
+  - Setting_A_Complete
+  - Setting_B_Complete
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
