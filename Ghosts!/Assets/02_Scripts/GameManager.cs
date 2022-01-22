@@ -21,6 +21,16 @@ public class GameManager : MonoBehaviour
     public List<GameObject> PlayerA_Ghosts;
     public List<GameObject> PlayerB_Ghosts;
 
+    public List<GameObject> PlayerA_Catched_Good_Ghosts;
+    public List<GameObject> PlayerA_Catched_Bad_Ghosts;
+    public List<GameObject> PlayerB_Catched_Good_Ghosts;
+    public List<GameObject> PlayerB_Catched_Bad_Ghosts;
+
+    public List<GameObject> PlayerA_Catched_Good_Ghost_Positions;
+    public List<GameObject> PlayerA_Catched_Bad_Ghost_Positions;
+    public List<GameObject> PlayerB_Catched_Good_Ghost_Positions;
+    public List<GameObject> PlayerB_Catched_Bad_Ghost_Positions;
+
     public List<Cell> PlayerA_Start_Positions;
     public List<Cell> PlayerB_Start_Positions;
 
@@ -29,6 +39,9 @@ public class GameManager : MonoBehaviour
     public GameObject TilePosition_Parent;
     public GameObject PlayerTurn_Fire;
     public GameObject Opposite_Turn_Fire;
+
+    public GameObject PlayerA_UI;
+    public GameObject PlayerB_UI;
 
     public bool isSorted;
     public bool isSettingAComplete;
@@ -39,7 +52,13 @@ public class GameManager : MonoBehaviour
 
     public string PlayerCode;
 
-    public Text GameOverText;
+    public GameObject GameOverText;
+    public List<Material> numbers;
+
+    public MeshRenderer A_GoodGhost_Number;
+    public MeshRenderer A_BadGhost_Number; 
+    public MeshRenderer B_GoodGhost_Number; 
+    public MeshRenderer B_Badhost_Number; 
 
     void Start()
     {
@@ -112,6 +131,8 @@ public class GameManager : MonoBehaviour
 
         PlayerTurn_Fire = GameObject.Find("PlayerA_Turn_Candle").transform.GetChild(5).gameObject;
         Opposite_Turn_Fire = GameObject.Find("PlayerB_Turn_Candle").transform.GetChild(5).gameObject;
+        PlayerA_UI.SetActive(true);
+        PlayerB_UI.SetActive(true);
 
         GameObject.Find("MainCamera_B").gameObject.SetActive(false);
 
@@ -145,10 +166,42 @@ public class GameManager : MonoBehaviour
 
         PlayerTurn_Fire = GameObject.Find("PlayerB_Turn_Candle").transform.GetChild(5).gameObject;
         Opposite_Turn_Fire = GameObject.Find("PlayerA_Turn_Candle").transform.GetChild(5).gameObject;
+        PlayerB_UI.SetActive(true);
+        PlayerA_UI.SetActive(true);
 
         GameObject.Find("MainCamera_A").gameObject.SetActive(false);
 
         PV.RPC("Setting_B_Complete", RpcTarget.All);
+    }
+
+    public void Detect_Winner()
+    {
+        if(PhotonNetwork.IsMasterClient)
+        {
+            if(PlayerB_Catched_Bad_Ghosts.Count == 4) // A 플레이어가 나쁜 유령 모두 잡힌 경우 : A 승리
+            {
+                isPlayerWin = true;
+                PV.RPC("GameOver", RpcTarget.All);
+            }
+            else if(PlayerA_Catched_Good_Ghosts.Count == 4) // A 플레이어가 착한 유령 모두 잡은 경우 : A 승리
+            {
+                isPlayerWin = true;
+                PV.RPC("GameOver", RpcTarget.All);
+            }
+        }
+        else if(!PhotonNetwork.IsMasterClient)
+        {
+            if(PlayerA_Catched_Bad_Ghosts.Count == 4) // B 플레이어가 나쁜 유령 모두 잡힌 경우 : B 승리
+            {
+                isPlayerWin = true;
+                PV.RPC("GameOver", RpcTarget.All);
+            }
+            else if(PlayerB_Catched_Good_Ghosts.Count == 4) // B 플레이어가 착한 유령 모두 잡은 경우 : B 승리
+            {
+                isPlayerWin = true;
+                PV.RPC("GameOver", RpcTarget.All);
+            }
+        }
     }
 
     [PunRPC]
@@ -157,20 +210,72 @@ public class GameManager : MonoBehaviour
         isPlayerTurn = !isPlayerTurn;
 
         Turn_Fire_On();
+
+        PV.RPC("UpdateUI_Numbers", RpcTarget.All);
+
+        Detect_Winner();
     }
+
+
+
+    [PunRPC]
+    public void UpdateUI_Numbers()
+    {
+        A_GoodGhost_Number.material = numbers[4 - PlayerB_Catched_Good_Ghosts.Count];
+        A_BadGhost_Number.material = numbers[4 - PlayerB_Catched_Bad_Ghosts.Count];
+        B_GoodGhost_Number.material = numbers[4 - PlayerA_Catched_Good_Ghosts.Count];
+        B_Badhost_Number.material = numbers[4 - PlayerA_Catched_Bad_Ghosts.Count];
+    }
+
     [PunRPC]
     public void Turn_Fire_On()
     {
         if (isPlayerTurn)
         {
-            PlayerTurn_Fire.SetActive(true);
-            Opposite_Turn_Fire.SetActive(false);
+            StartCoroutine(LightOn(PlayerTurn_Fire.transform.GetChild(0).GetComponent<ParticleSystem>()
+                , PlayerTurn_Fire.transform.GetChild(2).GetComponent<Light>(), PlayerTurn_Fire));
+            StartCoroutine(LightOff(Opposite_Turn_Fire.transform.GetChild(0).GetComponent<ParticleSystem>()
+                , Opposite_Turn_Fire.transform.GetChild(2).GetComponent<Light>(), Opposite_Turn_Fire));
         }
         else
         {
-            Opposite_Turn_Fire.SetActive(true);
-            PlayerTurn_Fire.SetActive(false);
+            StartCoroutine(LightOn(Opposite_Turn_Fire.transform.GetChild(0).GetComponent<ParticleSystem>()
+                , Opposite_Turn_Fire.transform.GetChild(2).GetComponent<Light>(), Opposite_Turn_Fire));
+            StartCoroutine(LightOff(PlayerTurn_Fire.transform.GetChild(0).GetComponent<ParticleSystem>()
+                , PlayerTurn_Fire.transform.GetChild(2).GetComponent<Light>(), PlayerTurn_Fire));
         }
+    }
+
+    IEnumerator LightOn(ParticleSystem PS, Light light, GameObject parent)
+    {
+        parent.SetActive(true);
+
+        while(PS.startColor.a < 1)
+        {
+            Color tmp = PS.startColor;
+            tmp.a += 0.02f;
+            PS.startColor = tmp;
+
+            light.intensity += 0.04f;
+
+            yield return null;
+        }
+    }
+
+    IEnumerator LightOff(ParticleSystem PS, Light light, GameObject parent)
+    {
+        while (PS.startColor.a > 1)
+        {
+            Color tmp = PS.startColor;
+            tmp.a -= 0.02f;
+            PS.startColor = tmp;
+
+            light.intensity -= 0.04f;
+
+            yield return null;
+        }
+
+        parent.SetActive(false);
     }
 
     [PunRPC]
@@ -219,13 +324,18 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     public void GameOver()
     {
-        GameOverText.text = "GameOver!!";
+        GameOverText.SetActive(true);
+        GameOverText.GetComponent<Text>().text = "GameOver!!";
         Text winner = GameOverText.transform.GetChild(0).GetComponent<Text>();
 
         if (PhotonNetwork.IsMasterClient && isPlayerWin)
             winner.text = "PlayerA Win!!";
+        else if (PhotonNetwork.IsMasterClient && !isPlayerWin)
+            winner.text = "PlayerB Win!!";
         else if (!PhotonNetwork.IsMasterClient && isPlayerWin)
             winner.text = "PlayerB Win!!";
+        else if (!PhotonNetwork.IsMasterClient && !isPlayerWin)
+            winner.text = "PlayerA Win!!";
 
         else
         {

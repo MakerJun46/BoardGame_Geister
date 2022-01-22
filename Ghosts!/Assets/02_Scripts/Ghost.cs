@@ -13,6 +13,8 @@ public class Ghost : MonoBehaviour
 
     public string PlayerCode;
 
+    public bool isCatched;
+
     public enum GhostType { good, bad};
 
     public GhostType ghost_Type;
@@ -60,6 +62,13 @@ public class Ghost : MonoBehaviour
         }
 
         Turn_On_PS = false;
+    }
+
+    public void Catched()
+    {
+        cell_Index = 0;
+        Turn_On_PS = false;
+        neighbor_Cells.Clear();
     }
 
 }

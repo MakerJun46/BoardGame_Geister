@@ -13,6 +13,17 @@ public class GhostMovement : MonoBehaviour
 
     public PhotonView PV;
 
+    public bool isGhostMoving;
+
+    public Material Ghost_Body_Fade;
+    public Material Ghost_Body;
+    public Material Ghost_Eye_Fade;
+    public Material Ghost_Eye;
+    public Material Ghost_Good_Fade;
+    public Material Ghost_Good;
+    public Material Ghost_Bad_Fade;
+    public Material Ghost_Bad;
+
     private void Awake()
     {
         instance = this;
@@ -21,11 +32,12 @@ public class GhostMovement : MonoBehaviour
 
     void Start()
     {
+        isGhostMoving = false;
     }
 
     void Update()
     {
-        if(GameManager.instance.isPlayerTurn)
+        if(GameManager.instance.isPlayerTurn && !isGhostMoving)
         {
             SelectGhost();
         }
@@ -40,9 +52,10 @@ public class GhostMovement : MonoBehaviour
 
             Debug.Log("Hit : " + hitInfo.transform.gameObject.name);
 
-            if (hit && hitInfo.transform.gameObject.tag == "Ghost")
+            if (hit && hitInfo.transform.gameObject.tag == "Ghost" && hitInfo.transform.GetComponent<PhotonView>().IsMine 
+                    && !hitInfo.transform.GetComponent<Ghost>().isCatched) // 나의 유령 타겟
             {
-                if(!hitInfo.transform.gameObject.GetComponent<Ghost>().Turn_On_PS && hitInfo.transform.GetComponent<PhotonView>().IsMine)
+                if(!hitInfo.transform.gameObject.GetComponent<Ghost>().Turn_On_PS)
                 {
                     if(PhotonNetwork.IsMasterClient)
                         playerA_Select_Off();
@@ -64,15 +77,35 @@ public class GhostMovement : MonoBehaviour
                     select_Ghost = null;
                 }
             }
-
-            else if(hit && hitInfo.transform.gameObject.tag == "Cell" && select_Ghost != null)
+            else if(hit && hitInfo.transform.gameObject.tag == "Ghost" && select_Ghost != null && !hitInfo.transform.GetComponent<PhotonView>().IsMine
+                && !hitInfo.transform.GetComponent<Ghost>().isCatched) // 상대 유령 타겟
             {
-                Move(hitInfo.transform);
+                Cell hitGhostCell = GameManager.instance.Board_Cells[hitInfo.transform.GetComponent<Ghost>().cell_Index];
+                foreach(Cell c in select_Ghost.GetComponent<Ghost>().neighbor_Cells)
+                {
+                    if(hitGhostCell.cell_Index == c.cell_Index)     // 이웃한 cell의 Ghost인 경우에만 Catch
+                    {
+                        StartCoroutine(vanishGhost(hitInfo.transform.gameObject)); // 잡은 유령 사라지는 연출 -> 잡기 함수 호출
+                        Move(GameManager.instance.Board_Cells[hitInfo.transform.GetComponent<Ghost>().cell_Index].transform);
+                    }
+                }
+            }
+
+            else if(hit && hitInfo.transform.gameObject.tag == "Cell" && select_Ghost != null && hitInfo.transform.GetComponent<Cell>().this_Cell_Ghost == null) // 이동 셀 선택
+            {
+                Cell hitCell = hitInfo.transform.GetComponent<Cell>();
+                foreach(Cell c in select_Ghost.GetComponent<Ghost>().neighbor_Cells)    // 이웃한 cell인 경우에만 move
+                {
+                    if(hitCell.cell_Index == c.cell_Index)
+                    {
+                        Move(hitInfo.transform);
+                    }
+                }
             }
         }
     }
 
-    public void Move(Transform target)
+    public void Move(Transform target) // Cell 의 transform
     {
         if (target.gameObject.GetComponent<Cell>().isEscapeCell &&
         select_Ghost.GetComponent<Ghost>().ghost_Type == Ghost.GhostType.bad)   // 나쁜 유령이 EscapeCell로 이동하려하면 바로 return
@@ -97,14 +130,13 @@ public class GhostMovement : MonoBehaviour
             GameManager.instance.PV.RPC("GameOver", RpcTarget.All);
         }
         StartCoroutine(moveGhost(target));
-
-        PV.RPC("MoveGhost_setCell", RpcTarget.All, select_Ghost.GetComponent<PhotonView>().ViewID, target.gameObject.GetComponent<Cell>().cell_Index);
-
         select_Ghost.GetComponent<Ghost>().TurnOff_CanMove_PS();
-
         PV.RPC("OffGhostCross", RpcTarget.All);
 
-        GameManager.instance.PV.RPC("Change_Turn", RpcTarget.All);
+        Debug.Log("moved cell index : " + target.transform.gameObject.GetComponent<Cell>().cell_Index);
+
+        PV.RPC("MoveGhost_setCell", RpcTarget.AllBuffered, select_Ghost.GetComponent<PhotonView>().ViewID, target.gameObject.GetComponent<Cell>().cell_Index);
+
     }
 
     public void playerA_Select_Off()
@@ -125,17 +157,73 @@ public class GhostMovement : MonoBehaviour
 
     public IEnumerator moveGhost(Transform target)
     {
+        isGhostMoving = true;
+
         while(select_Ghost.transform.position != target.position)
         {
             select_Ghost.transform.position = Vector3.Lerp(select_Ghost.transform.position, target.position, Time.deltaTime * 15);
             yield return null;
         }
 
-        GameManager.instance.Board_Cells[select_Ghost.GetComponent<Ghost>().cell_Index].this_Cell_Ghost = null;
-        select_Ghost.GetComponent<Ghost>().cell_Index = target.GetComponent<Cell>().cell_Index;
+        select_Ghost = null;
+        isGhostMoving = false;
+
+        GameManager.instance.PV.RPC("Change_Turn", RpcTarget.All);
+    }
+
+    public IEnumerator vanishGhost(GameObject go)
+    {
+        Transform ghost = go.transform.GetChild(0);
+
+        ghost.GetChild(0).GetComponent<MeshRenderer>().material = Ghost_Eye_Fade;
+        Material GhostType = go.GetComponent<Ghost>().ghost_Type == Ghost.GhostType.good ? Ghost_Good_Fade : Ghost_Bad_Fade;
+        ghost.GetChild(1).GetComponent<MeshRenderer>().material = GhostType;
+        ghost.GetChild(2).GetComponent<MeshRenderer>().material = Ghost_Body_Fade;
+
+        while(Ghost_Body_Fade.color.a > 0)
+        {
+            Debug.Log($"alpha 조정 중 : {Ghost_Body_Fade.color.a}");
+            Color tmp = Ghost_Eye_Fade.color;
+            tmp.a -= 0.02f;
+            Ghost_Eye_Fade.color = tmp;
+
+            tmp = Ghost_Body_Fade.color;
+            tmp.a -= 0.02f;
+            Ghost_Body_Fade.color = tmp;
+
+            tmp = GhostType.color;
+            tmp.a -= 0.02f;
+            GhostType.color = tmp;
+
+            yield return null;
+        }
+
+        PV.RPC("Catch_Opponent_Ghost", RpcTarget.All, go.transform.GetComponent<PhotonView>().ViewID); // catch ghost
+        yield return new WaitForSeconds(0.5f);
+
+        while(Ghost_Body_Fade.color.a < 1)
+        {
+            Debug.Log($"alpha 조정 중 : {Ghost_Body_Fade.color.a}");
+            Color tmp = Ghost_Eye_Fade.color;
+            tmp.a += 0.02f;
+            Ghost_Eye_Fade.color = tmp;
+
+            tmp = Ghost_Body_Fade.color;
+            tmp.a += 0.02f;
+            Ghost_Body_Fade.color = tmp;
+
+            tmp = GhostType.color;
+            tmp.a += 0.02f;
+            GhostType.color = tmp;
+
+            yield return null;
+        }
+
+        ghost.GetChild(0).GetComponent<MeshRenderer>().material = Ghost_Eye;
+        ghost.GetChild(1).GetComponent<MeshRenderer>().material = go.GetComponent<Ghost>().ghost_Type == Ghost.GhostType.good ? Ghost_Good : Ghost_Bad;
+        ghost.GetChild(2).GetComponent<MeshRenderer>().material = Ghost_Body;
     }
     
-
     [PunRPC]
     public void SetGhostCross(int ViewID)
     {
@@ -161,5 +249,54 @@ public class GhostMovement : MonoBehaviour
         go.GetComponent<Ghost>().cell_Index = cell_index;
 
         GameManager.instance.Board_Cells[cell_index].this_Cell_Ghost = go;
+    }
+
+    [PunRPC]
+    public void Catch_Opponent_Ghost(int ViewID)
+    {
+        GameObject go = PhotonView.Find(ViewID).gameObject;
+
+        go.GetComponent<Ghost>().isCatched = true;
+        go.GetComponent<Ghost>().Catched();
+
+        if (go.GetComponent<Ghost>().ghost_Type == Ghost.GhostType.good)    // Catched good Ghost
+        {
+            if ((PhotonNetwork.IsMasterClient && go.GetComponent<PhotonView>().IsMine)      // 내가 A플레이어이고 내 유령이 잡혔다면 
+                || (!PhotonNetwork.IsMasterClient && !go.GetComponent<PhotonView>().IsMine))    // || 내가 B플레이어고 상대 유령을 잡았다면
+            {
+                go.transform.position = GameManager.instance.PlayerB_Catched_Good_Ghost_Positions[GameManager.instance.PlayerB_Catched_Good_Ghosts.Count].transform.position;
+
+                GameManager.instance.PlayerB_Catched_Good_Ghosts.Add(go);
+
+                go.transform.rotation = Quaternion.Euler(0, 180, 0);
+            }
+            else if((!PhotonNetwork.IsMasterClient && go.GetComponent<PhotonView>().IsMine)  // 내가 B플레이어고 내 유령이 잡혔다면
+                || (PhotonNetwork.IsMasterClient && !go.GetComponent<PhotonView>().IsMine)) // || 내가 A 플레이어고 상대 유령을 잡았다면
+            {
+                go.transform.position = GameManager.instance.PlayerA_Catched_Good_Ghost_Positions[GameManager.instance.PlayerA_Catched_Good_Ghosts.Count].transform.position;
+
+                GameManager.instance.PlayerA_Catched_Good_Ghosts.Add(go);
+
+                go.transform.rotation = Quaternion.Euler(0, 0, 0);
+            }
+
+        }
+        else // Catched bad Ghost
+        {
+            if ((PhotonNetwork.IsMasterClient && go.GetComponent<PhotonView>().IsMine)      // 내가 A플레이어이고 내 유령이 잡혔다면 
+                || (!PhotonNetwork.IsMasterClient && !go.GetComponent<PhotonView>().IsMine))    // || 내가 B플레이어고 상대 유령을 잡았다면
+            {
+                go.transform.position = GameManager.instance.PlayerB_Catched_Bad_Ghost_Positions[GameManager.instance.PlayerB_Catched_Bad_Ghosts.Count].transform.position;
+
+                GameManager.instance.PlayerB_Catched_Bad_Ghosts.Add(go);
+            }
+            else if ((!PhotonNetwork.IsMasterClient && go.GetComponent<PhotonView>().IsMine)  // 내가 B플레이어고 내 유령이 잡혔다면
+                || (PhotonNetwork.IsMasterClient && !go.GetComponent<PhotonView>().IsMine)) // || 내가 A 플레이어고 상대 유령을 잡았다면
+            {
+                go.transform.position = GameManager.instance.PlayerA_Catched_Bad_Ghost_Positions[GameManager.instance.PlayerA_Catched_Bad_Ghosts.Count].transform.position;
+
+                GameManager.instance.PlayerA_Catched_Bad_Ghosts.Add(go);
+            }
+        }
     }
 }

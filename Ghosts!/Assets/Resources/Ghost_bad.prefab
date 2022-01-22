@@ -327,6 +327,7 @@ MonoBehaviour:
   neighbor_Cells: []
   Turn_On_PS: 0
   PlayerCode: 
+  isCatched: 0
   ghost_Type: 1
 --- !u!65 &2421274101019037740
 BoxCollider:
@@ -377,6 +378,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SynchronizePosition: 1
-  m_SynchronizeRotation: 1
+  m_SynchronizeRotation: 0
   m_SynchronizeScale: 0
-  m_UseLocal: 0
+  m_UseLocal: 1

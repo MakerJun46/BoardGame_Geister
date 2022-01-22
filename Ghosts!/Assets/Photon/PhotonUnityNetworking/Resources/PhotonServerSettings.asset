@@ -55,6 +55,8 @@ MonoBehaviour:
   - OnGhostCross
   - GameOver
   - MoveGhost_setCell
+  - Catch_Opponent_Ghost
+  - UpdateUI_Numbers
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
