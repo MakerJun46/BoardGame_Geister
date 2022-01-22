@@ -58,7 +58,11 @@ public class GameManager : MonoBehaviour
     public MeshRenderer A_GoodGhost_Number;
     public MeshRenderer A_BadGhost_Number; 
     public MeshRenderer B_GoodGhost_Number; 
-    public MeshRenderer B_Badhost_Number; 
+    public MeshRenderer B_Badhost_Number;
+
+    public GameObject Lantern_Fire;
+
+    public int GameReplayCount;
 
     void Start()
     {
@@ -74,6 +78,8 @@ public class GameManager : MonoBehaviour
         {
             Board_Cells[i].cell_Index = i;
         }
+
+        GameReplayCount = 0;
     }
 
     void Update()
@@ -82,7 +88,7 @@ public class GameManager : MonoBehaviour
         {
             isGameStarted = true;
             PV.RPC("Turn_Fire_On", RpcTarget.All);
-            Debug.Log("GameStart");
+            Lantern_Fire.SetActive(true);
         }
     }
 
@@ -325,17 +331,16 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         GameOverText.SetActive(true);
-        GameOverText.GetComponent<Text>().text = "GameOver!!";
-        Text winner = GameOverText.transform.GetChild(0).GetComponent<Text>();
+        Text winner = GameOverText.transform.GetChild(2).GetComponent<Text>();
 
         if (PhotonNetwork.IsMasterClient && isPlayerWin)
-            winner.text = "PlayerA Win!!";
+            winner.text = "PlayerAWin";
         else if (PhotonNetwork.IsMasterClient && !isPlayerWin)
-            winner.text = "PlayerB Win!!";
+            winner.text = "PlayerBWin";
         else if (!PhotonNetwork.IsMasterClient && isPlayerWin)
-            winner.text = "PlayerB Win!!";
+            winner.text = "PlayerBWin";
         else if (!PhotonNetwork.IsMasterClient && !isPlayerWin)
-            winner.text = "PlayerA Win!!";
+            winner.text = "PlayerAWin";
 
         else
         {

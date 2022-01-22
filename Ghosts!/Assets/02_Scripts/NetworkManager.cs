@@ -66,4 +66,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         GameManager.instance.Set_Player_B();
     }
+
+    public void ReplayReady_Network()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.JoinOrCreateRoom("Room" + GameManager.instance.GameReplayCount.ToString(), new RoomOptions { MaxPlayers = 2 }, null);
+    }
+
 }
