@@ -6,17 +6,14 @@ using Photon.Pun;
 public class Ghost : MonoBehaviour
 {
     public int cell_Index;
-
     public List<Cell> neighbor_Cells;
-
-    public bool Turn_On_PS;
 
     public string PlayerCode;
 
+    public bool Turn_On_PS;
     public bool isCatched;
 
     public enum GhostType { good, bad};
-
     public GhostType ghost_Type;
 
     private void Start()

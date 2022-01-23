@@ -8,7 +8,6 @@ public class GhostMovement : MonoBehaviour
     public static GhostMovement instance;
 
     public GameObject GhostCross;
-
     public GameObject select_Ghost;
 
     public PhotonView PV;
@@ -24,11 +23,12 @@ public class GhostMovement : MonoBehaviour
     public Material Ghost_Bad_Fade;
     public Material Ghost_Bad;
 
+    public AudioSource Ghost_Catched_Audio;
+
     private void Awake()
     {
         instance = this;
     }
-
 
     void Start()
     {
@@ -126,17 +126,18 @@ public class GhostMovement : MonoBehaviour
             }
 
             // 위 조건에 걸리지 않으면 (상대 진영 escapecell에 들어갔고, 내 유령의 ghost_Type 이 good 이라면
+            StartCoroutine(moveGhost(target));
+            select_Ghost.GetComponent<Ghost>().TurnOff_CanMove_PS();
+            PV.RPC("OffGhostCross", RpcTarget.All);
             GameManager.instance.isPlayerWin = true;    // 승리
             GameManager.instance.PV.RPC("GameOver", RpcTarget.All);
+            return;
         }
         StartCoroutine(moveGhost(target));
         select_Ghost.GetComponent<Ghost>().TurnOff_CanMove_PS();
         PV.RPC("OffGhostCross", RpcTarget.All);
 
-        Debug.Log("moved cell index : " + target.transform.gameObject.GetComponent<Cell>().cell_Index);
-
         PV.RPC("MoveGhost_setCell", RpcTarget.AllBuffered, select_Ghost.GetComponent<PhotonView>().ViewID, target.gameObject.GetComponent<Cell>().cell_Index);
-
     }
 
     public void playerA_Select_Off()
@@ -159,9 +160,11 @@ public class GhostMovement : MonoBehaviour
     {
         isGhostMoving = true;
 
+        select_Ghost.GetComponent<AudioSource>().Play();
+
         while(select_Ghost.transform.position != target.position)
         {
-            select_Ghost.transform.position = Vector3.Lerp(select_Ghost.transform.position, target.position, Time.deltaTime * 15);
+            select_Ghost.transform.position = Vector3.Lerp(select_Ghost.transform.position, target.position, Time.deltaTime * 5);
             yield return null;
         }
 
@@ -254,6 +257,8 @@ public class GhostMovement : MonoBehaviour
     [PunRPC]
     public void Catch_Opponent_Ghost(int ViewID)
     {
+        Ghost_Catched_Audio.Play();
+
         GameObject go = PhotonView.Find(ViewID).gameObject;
 
         go.GetComponent<Ghost>().isCatched = true;

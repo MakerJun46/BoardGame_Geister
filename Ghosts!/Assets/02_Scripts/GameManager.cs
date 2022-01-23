@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Photon;
 using Photon.Pun;
 using UnityEngine.UI;
+using TMPro;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -36,9 +39,12 @@ public class GameManager : MonoBehaviour
 
     public List<Cell> Board_Cells;
 
+    public List<Material> numbers;
+
     public GameObject TilePosition_Parent;
     public GameObject PlayerTurn_Fire;
     public GameObject Opposite_Turn_Fire;
+    public GameObject Lantern_Fire;
 
     public GameObject PlayerA_UI;
     public GameObject PlayerB_UI;
@@ -52,22 +58,28 @@ public class GameManager : MonoBehaviour
 
     public string PlayerCode;
 
-    public GameObject GameOverText;
-    public List<Material> numbers;
-
     public MeshRenderer A_GoodGhost_Number;
     public MeshRenderer A_BadGhost_Number; 
     public MeshRenderer B_GoodGhost_Number; 
     public MeshRenderer B_Badhost_Number;
 
-    public GameObject Lantern_Fire;
+    public GameObject WaitingPanel;
+    public GameObject GameReadyScene;
+    public GameObject GameOverScene;
 
     public int GameReplayCount;
 
+    public AudioSource ButtonClick_Audio;
+    public AudioSource GameOver_Audio;
+    public GameObject GameReadyScene_Audio;
+
     void Start()
     {
-        Screen.SetResolution(800, 600, false);
+        GameReplayCount = 0;
+    }
 
+    public void ResetValue()
+    {
         isSorted = false;
         isSettingAComplete = false;
         isSettingBComplete = false;
@@ -79,35 +91,42 @@ public class GameManager : MonoBehaviour
             Board_Cells[i].cell_Index = i;
         }
 
-        GameReplayCount = 0;
+        GhostMovement.instance.isGhostMoving = false;
+
+        PlayerA_Ghosts.Clear();
+        PlayerB_Ghosts.Clear();
+        PlayerA_Catched_Bad_Ghosts.Clear();
+        PlayerA_Catched_Good_Ghosts.Clear();
+        PlayerB_Catched_Bad_Ghosts.Clear();
+        PlayerB_Catched_Good_Ghosts.Clear();
+
+        GameReplayCount++;
     }
 
     void Update()
     {
         if (PhotonNetwork.IsMasterClient && isSettingAComplete && isSettingBComplete && !isGameStarted)
         {
+            GameReadyScene_Audio.SetActive(false);
+
             isGameStarted = true;
             PV.RPC("Turn_Fire_On", RpcTarget.All);
-            Lantern_Fire.SetActive(true);
+            PV.RPC("Off_StartPanel", RpcTarget.All);
         }
     }
 
-    public void Loading()
+    public void Shuffle<T>(IList<T> list)
     {
-        Debug.Log("Loading..");
-        Transform tmp = Board_Cells[0].transform;
-        for (int i = 1; i < Board_Cells.Count; i++)
-        {
-            if (tmp.position == Board_Cells[i].transform.position)
-                return;
-        }
+        int n = list.Count;
 
-        for (int i = 0; i < Board_Cells.Count; i++)
+        while(n > 1)
         {
-            Board_Cells[i].cell_Index = i;
+            n--;
+            int k = random.Next(n + 1);
+            T value = list[k];
+            list[k] = list[n];
+            list[n] = value;
         }
-
-        isSorted = true;
     }
 
     public void Set_Player_A()
@@ -116,8 +135,9 @@ public class GameManager : MonoBehaviour
 
         random = new System.Random();
         int randomIndex = random.Next(0, 8);
-
         int index = 0;
+
+        Shuffle<Cell>(PlayerA_Start_Positions);
 
         for (int i = 0; i < 4; i++)
         {
@@ -140,7 +160,8 @@ public class GameManager : MonoBehaviour
         PlayerA_UI.SetActive(true);
         PlayerB_UI.SetActive(true);
 
-        GameObject.Find("MainCamera_B").gameObject.SetActive(false);
+        GameObject.Find("Camera").transform.Find("MainCamera_A").gameObject.SetActive(true);
+        GameObject.Find("Camera").transform.Find("MainCamera_B").gameObject.SetActive(false);
 
         PV.RPC("Setting_A_Complete", RpcTarget.All);
     }
@@ -151,8 +172,9 @@ public class GameManager : MonoBehaviour
 
         random = new System.Random();
         int randomIndex = random.Next(0, 8);
-
         int index = 0;
+
+        Shuffle<Cell>(PlayerB_Start_Positions);
 
         for (int i = 0; i < 4; i++)
         {
@@ -175,7 +197,8 @@ public class GameManager : MonoBehaviour
         PlayerB_UI.SetActive(true);
         PlayerA_UI.SetActive(true);
 
-        GameObject.Find("MainCamera_A").gameObject.SetActive(false);
+        GameObject.Find("Camera").transform.Find("MainCamera_A").gameObject.SetActive(false);
+        GameObject.Find("Camera").transform.Find("MainCamera_B").gameObject.SetActive(true);
 
         PV.RPC("Setting_B_Complete", RpcTarget.All);
     }
@@ -210,6 +233,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void WatingPlayer()
+    {
+        WaitingPanel.SetActive(true);
+        ButtonClick_Audio.Play();
+    }
+
     [PunRPC]
     public void Change_Turn()
     {
@@ -221,8 +250,6 @@ public class GameManager : MonoBehaviour
 
         Detect_Winner();
     }
-
-
 
     [PunRPC]
     public void UpdateUI_Numbers()
@@ -255,13 +282,15 @@ public class GameManager : MonoBehaviour
     IEnumerator LightOn(ParticleSystem PS, Light light, GameObject parent)
     {
         parent.SetActive(true);
+        ParticleSystem.MainModule main = PS.main;
 
-        while(PS.startColor.a < 1)
+        parent.GetComponent<AudioSource>().Play();
+
+        while (light.intensity < 2)
         {
-            Color tmp = PS.startColor;
+            Color tmp = main.startColor.color;
             tmp.a += 0.02f;
-            PS.startColor = tmp;
-
+            main.startColor = tmp;
             light.intensity += 0.04f;
 
             yield return null;
@@ -270,12 +299,12 @@ public class GameManager : MonoBehaviour
 
     IEnumerator LightOff(ParticleSystem PS, Light light, GameObject parent)
     {
-        while (PS.startColor.a > 1)
+        ParticleSystem.MainModule main = PS.main;
+        while (light.intensity > 0)
         {
-            Color tmp = PS.startColor;
+            Color tmp = main.startColor.color;
             tmp.a -= 0.02f;
-            PS.startColor = tmp;
-
+            main.startColor = tmp;
             light.intensity -= 0.04f;
 
             yield return null;
@@ -312,9 +341,8 @@ public class GameManager : MonoBehaviour
         go.GetComponent<Ghost>().cell_Index = cell_index;
 
         Board_Cells[cell_index].this_Cell_Ghost = go;
-
-        Debug.Log(go + "ÀÇ cell index º¯°æ : " + cell_index);
     }
+
     [PunRPC]
     public void Setting_A_Complete()
     {
@@ -330,8 +358,12 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     public void GameOver()
     {
-        GameOverText.SetActive(true);
-        Text winner = GameOverText.transform.GetChild(2).GetComponent<Text>();
+        GameOverScene.SetActive(true);
+
+        GameOver_Audio.Play();
+        GameReadyScene.SetActive(true);
+        
+        TextMeshProUGUI winner = GameOverScene.transform.Find("Winner").GetComponent<TextMeshProUGUI>();
 
         if (PhotonNetwork.IsMasterClient && isPlayerWin)
             winner.text = "PlayerAWin";
@@ -346,5 +378,15 @@ public class GameManager : MonoBehaviour
         {
             winner.text = "Bug";
         }
+    }
+
+    [PunRPC]
+    public void Off_StartPanel()
+    {
+        GameReadyScene.SetActive(false);
+        GameOverScene.SetActive(false);
+        WaitingPanel.SetActive(false);
+
+        Lantern_Fire.SetActive(true);
     }
 }

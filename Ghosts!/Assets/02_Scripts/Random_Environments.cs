@@ -24,6 +24,9 @@ public class Random_Environments : MonoBehaviour
     float next_blink;
     float next_Lightning;
 
+    public AudioSource Lightning_Audio;
+    public AudioSource FireIgnite_Audio;
+
     void Start()
     {
         random = new System.Random();
@@ -81,6 +84,8 @@ public class Random_Environments : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
 
+        FireIgnite_Audio.Play();
+
         Lantern_Fire.SetActive(true);
 
         isBlinking = false;
@@ -88,6 +93,8 @@ public class Random_Environments : MonoBehaviour
 
     IEnumerator Lightning()
     {
+        Lightning_Audio.Play();
+
         Window_Light.intensity = random.Next(5, 7);
         yield return new WaitForSeconds(0.1f);
         Window_Light.intensity = random.Next(3, 5);

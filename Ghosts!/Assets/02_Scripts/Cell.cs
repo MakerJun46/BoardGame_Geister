@@ -17,10 +17,6 @@ public class Cell : MonoBehaviour
         CanMove_PS = transform.GetChild(0).gameObject;
         CanCatch_PS = transform.GetChild(1).gameObject;
     }
-    private void Update()
-    {
-        
-    }
 
     public void TurnOff_PS()
     {
@@ -36,15 +32,5 @@ public class Cell : MonoBehaviour
     public void TurnOn_CanCatch()
     {
         CanCatch_PS.SetActive(true);
-    }
-
-    public GameObject Ghost_inCell()
-    {
-        return this_Cell_Ghost;
-    }
-
-    public void setGhost_inCell(GameObject ghost)
-    {
-        this_Cell_Ghost = ghost;
     }
 }

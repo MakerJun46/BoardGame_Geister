@@ -28,35 +28,32 @@ MonoBehaviour:
     AuthMode: 0
     EnableLobbyStatistics: 0
     NetworkLogging: 1
-  DevRegion: kr
+  DevRegion: 
   PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
+  - Catch_Opponent_Ghost
+  - Change_Turn
   - ClickRpc
   - DestroyRpc
   - DestroySpaceship
   - Fire
-  - RespawnSpaceship
-  - Change_Turn
-  - Turn_Fire_On
-  - Add_PlayerA_Ghost
+  - GameOver
   - GameSet
-  - test
   - GhostSetCell
+  - MoveGhost_setCell
+  - Off_StartPanel
+  - OffGhostCross
   - Player_A_Ghosts_Set_Parent
   - Player_B_Ghosts_Set_Parent
+  - RespawnSpaceship
+  - SetGhostCross
   - Setting_A_Complete
   - Setting_B_Complete
-  - GhostSetCell2
-  - OffGhostCross
-  - SetGhostCross
-  - OnGhostCross
-  - GameOver
-  - MoveGhost_setCell
-  - Catch_Opponent_Ghost
+  - Turn_Fire_On
   - UpdateUI_Numbers
   DisableAutoOpenWizard: 1
   ShowSettings: 0
-  DevRegionSetOnce: 1
+  DevRegionSetOnce: 0
