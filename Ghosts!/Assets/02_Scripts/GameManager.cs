@@ -92,6 +92,7 @@ public class GameManager : MonoBehaviour
         }
 
         GhostMovement.instance.isGhostMoving = false;
+        GhostMovement.instance.GhostCross.SetActive(false);
 
         PlayerA_Ghosts.Clear();
         PlayerB_Ghosts.Clear();
@@ -99,6 +100,8 @@ public class GameManager : MonoBehaviour
         PlayerA_Catched_Good_Ghosts.Clear();
         PlayerB_Catched_Bad_Ghosts.Clear();
         PlayerB_Catched_Good_Ghosts.Clear();
+
+        UpdateUI_Numbers();
 
         GameReplayCount++;
     }

@@ -294,6 +294,8 @@ public class GhostMovement : MonoBehaviour
                 go.transform.position = GameManager.instance.PlayerB_Catched_Bad_Ghost_Positions[GameManager.instance.PlayerB_Catched_Bad_Ghosts.Count].transform.position;
 
                 GameManager.instance.PlayerB_Catched_Bad_Ghosts.Add(go);
+
+                go.transform.rotation = Quaternion.Euler(0, 180, 0);
             }
             else if ((!PhotonNetwork.IsMasterClient && go.GetComponent<PhotonView>().IsMine)  // 내가 B플레이어고 내 유령이 잡혔다면
                 || (PhotonNetwork.IsMasterClient && !go.GetComponent<PhotonView>().IsMine)) // || 내가 A 플레이어고 상대 유령을 잡았다면
@@ -301,6 +303,8 @@ public class GhostMovement : MonoBehaviour
                 go.transform.position = GameManager.instance.PlayerA_Catched_Bad_Ghost_Positions[GameManager.instance.PlayerA_Catched_Bad_Ghosts.Count].transform.position;
 
                 GameManager.instance.PlayerA_Catched_Bad_Ghosts.Add(go);
+
+                go.transform.rotation = Quaternion.Euler(0, 0, 0);
             }
         }
     }
