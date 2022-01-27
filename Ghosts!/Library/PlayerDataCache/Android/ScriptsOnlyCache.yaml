@@ -142,6 +142,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 2670}
     - Class: 114
+      Script: {instanceID: 2682}
+    - Class: 114
       Script: {instanceID: 2814}
     - Class: 114
       Script: {instanceID: 2820}
@@ -198,6 +200,8 @@ ScriptsOnlyBuild:
     - Class: 199
       Script: {instanceID: 0}
     - Class: 205
+      Script: {instanceID: 0}
+    - Class: 212
       Script: {instanceID: 0}
     - Class: 213
       Script: {instanceID: 0}
@@ -1024,12 +1028,6 @@ ScriptsOnlyBuild:
     className: TMP_SpriteAnimator
   - hash:
       serializedVersion: 2
-      Hash: 7e775d4eec1159292aee38bda10ddf32
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: 
-    className: CameraFacing
-  - hash:
-      serializedVersion: 2
       Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
     assemblyName: Assembly-CSharp.dll
     namespaceName: UnityEngine.UI.Extensions
@@ -1412,12 +1410,6 @@ ScriptsOnlyBuild:
     assemblyName: PhotonUnityNetworking.Demos.dll
     namespaceName: Photon.Pun.Demo.Cockpit
     className: ServerProperty
-  - hash:
-      serializedVersion: 2
-      Hash: 5648183942e1c22d510c7a8406031fc8
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: 
-    className: ExtendedFlycam
   - hash:
       serializedVersion: 2
       Hash: cba6cca6bb3290c4c00d709cf63843db
@@ -2297,4 +2289,4 @@ ScriptsOnlyBuild:
   platform: 13
   scenePathNames:
   - Assets/01_Scenes/Ghosts!.unity
-  playerPath: E:/SourceTree0115/Ghosts!/Ghosts!/build/Ghosts!_1.1.apk
+  playerPath: E:/SourceTree0115/Ghosts!/Ghosts!/build/Ghosts!_1.2.apk
