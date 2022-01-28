@@ -20,8 +20,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        Debug.Log("new player : " + newPlayer.NickName);
-
         if (PhotonNetwork.IsMasterClient)
         {
             PV.RPC("GameSet", RpcTarget.All);
